@@ -31,7 +31,10 @@ function preload(){
  snakeHeadD = loadImage('snakeHeadD.png');
  snakeHeadR = loadImage('snakeHeadR.png');
  snakeHeadL = loadImage('snakeHeadL.png');
- keyboardImage = loadImage('Keyboard.png')
+ keyboardImageU = loadImage('pressedUp.jpg')
+ keyboardImageD = loadImage('pressedDown.jpg')
+ spaceBarImageU = loadImage('spaceBarUp.png')
+ spaceBarImageD = loadImage('spaceBarDown.png') 
  appleImage = loadImage('apple.png')
 }
 
@@ -66,6 +69,7 @@ function resetGame(){
   text('Game Over',(width / 2) - 130, (height / 2 ) - 20);
   textSize(35)
   text('Restart',(width / 2) - 80, (height / 2) + 30);
+  image(spaceBarImageU, (width / 2) - 175 , (height / 2) + 0)
   gameEnd = true
   
 }
@@ -91,9 +95,11 @@ function draw(){
   background('#efffdf');
 
   // Start Text
-  if (mHistory == '0') { image(keyboardImage, (width / 2) - 100 , (height / 2) - 67.5)
+
+  if (mHistory == '0') { 
     textSize(50)
     text('Press To Start',(width / 2) - 195, (height / 2) + 150);
+    if (frameCount % 8 == 0) {image(keyboardImageD, (width / 2) - 100 , (height / 2) - 67.5)} else {image(keyboardImageU, (width / 2) - 100 , (height / 2) - 67.5)}
   }
 
   // Head Position
@@ -104,7 +110,7 @@ function draw(){
   // Fruit Position
 
   if (mHistory != '0') {  
-    if (random(0,1) < 0.2 && fPosition.length < 10) {
+    if (random(0,1) < 0.1 && fPosition.length < 10) {
     let fPositionX = floor(random(0,1) * (width / grid)) * grid;
     let fPositionY = floor(random(0,1) * (height / grid)) * grid;
     fPosition.push([fPositionX, fPositionY]);

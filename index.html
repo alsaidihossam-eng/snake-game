@@ -11,9 +11,122 @@
     <!-- Online p5.js CDN links -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"></script>
+
+    <!-- Firebase SDK Setup -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+      import { 
+        getFirestore, 
+        collection, 
+        addDoc, 
+        query, 
+        orderBy, 
+        limit, 
+        getDocs, 
+        serverTimestamp 
+      } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+      // Your Firebase Configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDs5UW4qovD0uAh8ua__XSKoHqf62RiRFI",
+        authDomain: "snake-game-753cc.firebaseapp.com",
+        projectId: "snake-game-753cc",
+        storageBucket: "snake-game-753cc.firebasestorage.app",
+        messagingSenderId: "1051392837139",
+        appId: "1:1051392837139:web:5917d1ed7c47ed47a2e1e6",
+        measurementId: "G-XS8JNJXGSC"
+      };
+
+      // Initialize Firebase & Firestore
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      // Expose Firestore methods globally for sketch.js
+      window.db = db;
+      window.addDoc = addDoc;
+      window.collection = collection;
+      window.query = query;
+      window.orderBy = orderBy;
+      window.limit = limit;
+      window.getDocs = getDocs;
+      window.serverTimestamp = serverTimestamp;
+
+      // Global function to fetch Top 10 High Scores
+      window.fetchLeaderboard = async function() {
+        const listEl = document.getElementById("leaderboard-list");
+        if (!listEl) return;
+
+        try {
+          const q = window.query(
+            window.collection(window.db, "leaderboard"),
+            window.orderBy("score", "desc"),
+            window.limit(10)
+          );
+
+          const snapshot = await window.getDocs(q);
+          listEl.innerHTML = "";
+
+          if (snapshot.empty) {
+            listEl.innerHTML = "<li>No high scores yet!</li>";
+            return;
+          }
+
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            const li = document.createElement("li");
+            li.textContent = `${data.name || 'Anonymous'}: ${data.score} pts`;
+            listEl.appendChild(li);
+          });
+        } catch (err) {
+          console.error("Leaderboard fetch error:", err);
+          listEl.innerHTML = "<li>Failed to load rankings.</li>";
+        }
+      };
+
+      // Global function to submit score
+      window.submitScore = async function(name, score) {
+        if (!score || score <= 0) return;
+        const cleanName = name.trim() || "Anonymous";
+
+        try {
+          await window.addDoc(window.collection(window.db, "leaderboard"), {
+            name: cleanName,
+            score: Number(score),
+            createdAt: window.serverTimestamp()
+          });
+          window.fetchLeaderboard();
+        } catch (err) {
+          console.error("Score submission error:", err);
+        }
+      };
+
+      // Fetch scores when page loads
+      window.addEventListener("DOMContentLoaded", () => {
+        window.fetchLeaderboard();
+      });
+    </script>
   </head>
 
   <body>
+    <div id="game-container">
+      <!-- Game Over Score Modal -->
+      <div id="score-modal" style="display: none;">
+        <h2>Game Over</h2>
+        <p>Your Score: <span id="final-score">0</span></p>
+        <input type="text" id="player-name" placeholder="Enter your name" maxlength="12" />
+        <button id="submit-score-btn">Submit Score</button>
+      </div>
+
+      <!-- Live Leaderboard Sidebar / Box -->
+      <div id="leaderboard-box">
+        <h3>🏆 Top 10 Players</h3>
+        <ol id="leaderboard-list">
+          <li>Loading...</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Main Game Script -->
     <script src="sketch.js"></script>
   </body>
 </html>
